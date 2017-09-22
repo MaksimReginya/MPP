@@ -1,29 +1,29 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace ThreadPool
 {
     class Mutex
     {
-        private int threadId = -1;
+        private int state; // 1 - locked, 0 - unlocked;
+
+        public Mutex()
+        {
+            this.state = 0;
+        }
 
         public void Lock()
         {
-            var id = Thread.CurrentThread.ManagedThreadId;
-            while (Interlocked.CompareExchange(ref threadId, id, -1) != -1)
+            while (true)
             {
-                //Thread.Sleep(10);
+                if (Interlocked.CompareExchange(ref state, 1, 0) == 0)
+                    return;
             }
         }
 
         public void Unlock()
         {
-            var id = Thread.CurrentThread.ManagedThreadId;
-            Interlocked.CompareExchange(ref threadId, -1, id);
+            Interlocked.CompareExchange(ref state, 0, 1);
         }
     }
 }
