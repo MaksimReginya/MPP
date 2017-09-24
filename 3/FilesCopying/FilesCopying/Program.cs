@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
-using System.Security.AccessControl;
 
 namespace FilesCopying
 {
@@ -35,10 +34,12 @@ namespace FilesCopying
         }
         private int count = 0;
         private int result = 0;      
-        private ManualResetEvent resetEvent = new ManualResetEvent(false);        
+        private ManualResetEvent resetEvent;        
         
         public FilesCopier()
-        { }
+        {
+            resetEvent = new ManualResetEvent(false);
+        }
 
         public int StartCopying(string targetFolder, string destinationFolder)
         {    
@@ -76,23 +77,6 @@ namespace FilesCopying
             }            
         }
 
-        private void CopyFile(object fileCouple)
-        {
-            var fileTuple = fileCouple as Tuple<string, string>;
-            try
-            {
-                File.Copy(fileTuple.Item1, fileTuple.Item2, true);
-                Interlocked.Increment(ref result);
-            }
-            catch
-            { }  
-            
-            if (Interlocked.Decrement(ref count) == 0)
-            {
-                resetEvent.Set();
-            }
-        }
-
         private void CreateDir(object directoryCouple)
         {
             var directoryTuple = directoryCouple as Tuple<string, string>;
@@ -103,13 +87,34 @@ namespace FilesCopying
                     Directory.CreateDirectory(directoryTuple.Item2);
                 }
                 catch
-                { }
+                {
+                    Console.WriteLine("Error: can not create directory: " + directoryTuple.Item2);
+                }
             }
-                                         
+
             if (Interlocked.Decrement(ref count) == 0)
             {
                 resetEvent.Set();
             }
         }
+
+        private void CopyFile(object fileCouple)
+        {
+            var fileTuple = fileCouple as Tuple<string, string>;
+            try
+            {
+                File.Copy(fileTuple.Item1, fileTuple.Item2, true);
+                Interlocked.Increment(ref result);
+            }
+            catch
+            {
+                Console.WriteLine("Error: can not copy file: " + fileTuple.Item2);
+            }
+
+            if (Interlocked.Decrement(ref count) == 0)
+            {
+                resetEvent.Set();
+            }
+        }        
     }
 }

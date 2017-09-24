@@ -1,7 +1,7 @@
-﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System;
 using System.Threading;
-using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace ThreadPool
 {
@@ -22,22 +22,20 @@ namespace ThreadPool
             if (threadCount <= 0)
                 throw new ArgumentException("threadCount must be greater than zero", "threadCount");            
 
-            this.taskQueue = new ConcurrentQueue<TaskDelegate>();
+            taskQueue = new ConcurrentQueue<TaskDelegate>();
 
             sheduleThread = new Thread(ShedulingThreads);
             sheduleThread.Name = "Shedule thread";
             sheduleThread.Start();    
 
-            threadsEvents = new Dictionary<int, ManualResetEvent>();
-
+            threadsEvents = new Dictionary<int, ManualResetEvent>();            
             this.threadCount = threadCount;
-            this.threads = new Thread[threadCount];
+            threads = new Thread[threadCount];
             for (int i = 0; i < threadCount; i++)
             {
-                this.threads[i] = new Thread(ThreadWork);
-                threadsEvents.Add(threads[i].ManagedThreadId, new ManualResetEvent(false));
-                this.threads[i].Name = "Pool Thread_" + (i + 1).ToString();
-                this.threads[i].Start();
+                threads[i] = new Thread(ThreadWork);
+                threadsEvents.Add(threads[i].ManagedThreadId, new ManualResetEvent(false));                
+                threads[i].Start();
             }
         }
 
@@ -53,7 +51,7 @@ namespace ThreadPool
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(Thread.CurrentThread.Name + ": " + ex.Message);
+                    Console.WriteLine(Thread.CurrentThread.ManagedThreadId + ": " + ex.Message);
                 }
                 finally
                 {                                  

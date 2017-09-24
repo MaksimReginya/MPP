@@ -5,7 +5,7 @@ namespace ThreadPool
 {
     class Mutex
     {
-        private int state; // 1 - locked, 0 - unlocked;
+        private int state; 
 
         public Mutex()
         {
@@ -23,7 +23,7 @@ namespace ThreadPool
 
         public void Unlock()
         {
-            Interlocked.CompareExchange(ref state, 0, 1);
+            Interlocked.Exchange(ref state, 0);
         }
     }
 }

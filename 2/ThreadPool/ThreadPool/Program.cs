@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace ThreadPool
 {
     class Program
-    {
+    {        
         static void Main(string[] args)
         {
             var mutex = new Mutex();
@@ -17,15 +13,13 @@ namespace ThreadPool
                 new Thread(() =>
                 {
                     mutex.Lock();
-                    Console.WriteLine("Thread_" + Thread.CurrentThread.ManagedThreadId + " locked mutex");
-                    Thread.Sleep(400);
-                    Console.WriteLine("Thread_" + Thread.CurrentThread.ManagedThreadId + " unlocked mutex");
+                    TaskForThread();
                     mutex.Unlock();
                 }).Start();
-            }
-            Console.WriteLine();
+            }            
             Console.ReadLine();
 
+            Console.WriteLine("Thread pool starts working");            
             ThreadPool pool = new ThreadPool(4);            
             for (int i = 0; i < 10; i++)
             {
@@ -39,9 +33,9 @@ namespace ThreadPool
 
         static void TaskForThread()
         {
-            Console.WriteLine("Thread " + Thread.CurrentThread.Name + " started to work");
+            Console.WriteLine("Thread " + Thread.CurrentThread.ManagedThreadId.ToString() + " started to work");
             Thread.Sleep(1000);
-            Console.WriteLine("Thread " + Thread.CurrentThread.Name + " finished to work");
+            Console.WriteLine("Thread " + Thread.CurrentThread.ManagedThreadId.ToString() + " finished to work");
         }
     }
 }
