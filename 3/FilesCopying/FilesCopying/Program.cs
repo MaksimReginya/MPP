@@ -19,8 +19,7 @@ namespace FilesCopying
             FilesCopier copier = new FilesCopier();
             Console.WriteLine("Copying...");
             int copiedFilesCount = copier.StartCopying(sourceFolder, destFolder);
-            Console.WriteLine("Number of copied files: {0}", copiedFilesCount);
-            Console.ReadKey();
+            Console.WriteLine("Number of copied files: {0}", copiedFilesCount);            
             return 0;
         }
     }
