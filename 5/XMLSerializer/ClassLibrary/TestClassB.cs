@@ -7,17 +7,22 @@ using System.Threading.Tasks;
 namespace ClassLibrary
 {    
     [ExportXML]
-    class TestClassB
+    class TestClassB: I
     {
         private string _privateString;
         public string _publicString;
-        public TestClassA obj;
+        protected TestClassA obj;
         private void PrivateMethod()
         { }
 
-        public string PublicMethod(string param)
+        public static string PublicMethod(string param)
         {
             return param;
         }
+    }
+
+    interface I
+    {
+        
     }
 }

@@ -7,33 +7,34 @@ using ClassLibrary;
 namespace XMLSerializer
 {
     class AssemblyClassesInfoCreator
-    {        
+    {
+        #region Private fields
+
         private readonly Dictionary<Type, bool> _isMentioned = new Dictionary<Type, bool>();
-        private Type[] _types;                
+        private Type[] _types;
+
+        #endregion
+
+        #region Constructors
 
         public AssemblyClassesInfoCreator(Assembly assembly)
-        {            
+        {
             InitMentionMap(assembly);
         }
 
-        private void InitMentionMap(Assembly assembly)
-        {            
-            _types = assembly.GetTypes();
-            foreach (var type in _types)
-            {
-                _isMentioned.Add(type, false);
-            }
-        }
+        #endregion
+
+        #region Public methods
 
         public IEnumerable<ClassMembers> Create()
-        {           
-            var classes = new List<ClassMembers>();            
+        {
+            var classes = new List<ClassMembers>();
             foreach (var type in _types)
             {
                 if (!_isMentioned[type])
                 {
                     ClassMembers classMembers = CreateClassInfo(type);
-                    if (classMembers != null) 
+                    if (classMembers != null)
                     {
                         classes.Add(classMembers);
                     }
@@ -42,8 +43,21 @@ namespace XMLSerializer
             return classes;
         }
 
+        #endregion
+
+        #region Private methods
+
+        private void InitMentionMap(Assembly assembly)
+        {
+            _types = assembly.GetTypes();
+            foreach (var type in _types)
+            {
+                _isMentioned.Add(type, false);
+            }
+        }
+
         private ClassMembers CreateClassInfo(Type type)
-        {                    
+        {
             if (!type.IsClass || type.GetCustomAttribute(typeof(ExportXML)) == null || _isMentioned[type])
             {
                 return null;
@@ -57,7 +71,7 @@ namespace XMLSerializer
                 ClassName = type.Name,
                 Inheritors = GetInheritors(type),
                 Methods = GetMethods(type)
-            };            
+            };
             GetClassFields(classMembers, type);
 
             return classMembers;
@@ -68,23 +82,24 @@ namespace XMLSerializer
             var usualFields = new List<ClassMembers.UsualField>();
             var childClassFields = new List<ClassMembers.ChildClassField>();
 
-            foreach (var field in type.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.DeclaredOnly | BindingFlags.Instance))
+            foreach (var field in type.GetFields(BindingFlags.NonPublic | BindingFlags.Public |
+                                                 BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Static))
             {
                 if (field.FieldType.IsClass && _types.Contains(field.FieldType))
                 {
-                    ClassMembers cd = CreateClassInfo(field.FieldType);
-                    if (cd != null)
+                    ClassMembers cm = CreateClassInfo(field.FieldType);
+                    if (cm != null)
                     {
                         var rf = new ClassMembers.ChildClassField
                         {
                             Name = field.Name,
                             AccessModifier = field.Attributes.ToString(),
-                            Type = cd
+                            Type = cm
                         };
 
                         childClassFields.Add(rf);
                         continue;
-                    }                    
+                    }
                 }
 
                 var vf = new ClassMembers.UsualField
@@ -105,12 +120,12 @@ namespace XMLSerializer
             var list = new List<string>();
             foreach (var realizedInteface in type.GetInterfaces())
             {
-                list.Add(realizedInteface.ToString());
+                list.Add(realizedInteface.FullName);
             }
             var subClasses = _types.Where(t => t.IsSubclassOf(type));
             foreach (var subClass in subClasses)
             {
-                list.Add(subClass.Name);
+                list.Add(subClass.FullName);
             }
             return list;
         }
@@ -118,7 +133,8 @@ namespace XMLSerializer
         private List<ClassMembers.Method> GetMethods(Type type)
         {
             var list = new List<ClassMembers.Method>();
-            var methods = type.GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.DeclaredOnly | BindingFlags.Instance);
+            var methods = type.GetMethods(BindingFlags.NonPublic | BindingFlags.Public |
+                                          BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Static);
             foreach (var method in methods)
             {
                 var classMethod = new ClassMembers.Method
@@ -127,7 +143,7 @@ namespace XMLSerializer
                     ReturnType = method.ReturnType,
                     Params = GetMethodParams(method),
                     AccessModifier = GetMethodAccessModifier(method)
-                };                
+                };
 
                 list.Add(classMethod);
             }
@@ -144,17 +160,19 @@ namespace XMLSerializer
                     Name = paramInfo.Name,
                     Type = paramInfo.ParameterType
                 };
-                
+
                 list.Add(param);
             }
             return list;
         }
 
         private string GetMethodAccessModifier(MethodInfo method)
-        {           
-            if (method.IsPrivate) return "Private";
-            if (method.IsPublic) return "Public";            
-            return "Protected";
+        {
+            if (method.IsPrivate) return "private";
+            if (method.IsPublic) return "public";
+            return "protected";
         }
+
+        #endregion
     }
 }
